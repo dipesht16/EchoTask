@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">स्मार्ट वॉइस मैनेजर</string>
+    <string name="home">होम</string>
+    <string name="tasks">कार्य</string>
+    <string name="settings">सेटिंग्स</string>
+    <string name="task_intelligence">कार्य इंटेलिजेंस</string>
+    <string name="search_placeholder">अपने कार्यों को खोजें…</string>
+    <string name="ongoing_tasks">चल रहे कार्य</string>
+    <string name="tasks_today">आज %1$d कार्य हैं</string>
+    <string name="add_task">कार्य जोड़ें</string>
+    <string name="add_new_task">नया कार्य जोड़ें</string>
+    <string name="define_task">अपना अगला महत्वपूर्ण\nकदम तय करें।</string>
+    <string name="task_title">कार्य का शीर्षक</string>
+    <string name="title_placeholder">क्या किया जाना चाहिए?</string>
+    <string name="description">विवरण</string>
+    <string name="desc_placeholder">इस कार्य के बारे में अधिक विवरण जोड़ें…</string>
+    <string name="date">तारीख</string>
+    <string name="time">समय</string>
+    <string name="priority">प्राथमिकता</string>
+    <string name="low">कम</string>
+    <string name="medium">मध्यम</string>
+    <string name="high">उच्च</string>
+    <string name="save_task">कार्य सुरक्षित करें</string>
+    <string name="theme">थीम</string>
+    <string name="dark_theme">डार्क थीम</string>
+    <string name="light_theme">लाइट थीम</string>
+    <string name="language">भाषा</string>
+    <string name="english">English</string>
+    <string name="hindi">हिंदी (Hindi)</string>
+    <string name="default_music">डिफ़ॉल्ट अधिसूचना संगीत</string>
+    <string name="system_default">सिस्टम डिफ़ॉल्ट</string>
+    <string name="custom_music_selected">कस्टम संगीत चुना गया</string>
+    <string name="reset_to_default">डिफ़ॉल्ट पर रीसेट करें</string>
+    <string name="back">पीछे</string>
+    <string name="voice_input">आवाज इनपुट</string>
+    <string name="speak_title">शीर्षक बोलें</string>
+</resources>

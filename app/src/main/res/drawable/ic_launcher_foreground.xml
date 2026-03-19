@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Center the image and set size to 66dp to fit safely within adaptive icon circle -->
+    <item
+        android:drawable="@drawable/app_icon_main"
+        android:gravity="center"
+        android:width="66dp"
+        android:height="66dp" />
+</layer-list>
