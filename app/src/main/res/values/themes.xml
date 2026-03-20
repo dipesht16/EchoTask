@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.SmartVoiceManager" parent="Theme.AppCompat.DayNight.NoActionBar" />
+    <style name="Theme.SmartVoiceManager" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Match the splash background to prevent white flicker during transition -->
+        <item name="android:windowBackground">#F8F9FF</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+    </style>
 </resources>

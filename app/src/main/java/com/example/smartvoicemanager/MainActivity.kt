@@ -13,21 +13,26 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -42,6 +47,7 @@ import com.example.smartvoicemanager.ui.task.AddEditTaskScreen
 import com.example.smartvoicemanager.ui.tasks.TasksScreen
 import com.example.smartvoicemanager.ui.theme.SmartVoiceManagerTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import java.util.Locale
 
 @AndroidEntryPoint
@@ -52,86 +58,177 @@ class MainActivity : AppCompatActivity() {
     ) { _ -> }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Core Splash Screen API
+        val splashScreen = installSplashScreen()
+        
+        // If this is a recreation (like language change), don't keep the system splash
+        if (savedInstanceState != null) {
+            splashScreen.setKeepOnScreenCondition { false }
+        }
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
         requestRequiredPermissions()
         checkBatteryOptimizations()
 
+        // Check if this is a fresh launch or a recreation
+        val isFirstLaunch = savedInstanceState == null
+
         setContent {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             val isDarkThemePref by settingsViewModel.isDarkTheme.collectAsState()
             val language by settingsViewModel.language.collectAsState()
             
-            // Update Locale properly using AppCompatDelegate
+            var showSplash by remember { mutableStateOf(isFirstLaunch) }
+            var isChangingLanguage by remember { mutableStateOf(false) }
+
+            // Initial Splash Timer (Only on first launch)
+            if (isFirstLaunch) {
+                LaunchedEffect(Unit) {
+                    delay(2000)
+                    showSplash = false
+                }
+            }
+
+            // Language Change Observer
             LaunchedEffect(language) {
                 val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(language)
                 if (AppCompatDelegate.getApplicationLocales() != appLocale) {
+                    isChangingLanguage = true
+                    // Give the UI a moment to show the loading circle before recreation
+                    delay(300)
                     AppCompatDelegate.setApplicationLocales(appLocale)
                 }
             }
 
             SmartVoiceManagerTheme(darkTheme = isDarkThemePref) {
-                val navController = rememberNavController()
-                val items = listOf(
-                    Screen.Home,
-                    Screen.Tasks,
-                    Screen.Settings
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (showSplash) {
+                        FullScreenSplash()
+                    } else {
+                        MainAppContent()
+                    }
+
+                    // Show loading overlay during language change
+                    if (isChangingLanguage) {
+                        LanguageLoadingOverlay()
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun LanguageLoadingOverlay() {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.6f))
+                .clickable(enabled = false) {}, // Block clicks
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 4.dp
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Updating Language...",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun FullScreenSplash() {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF8F9FF)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.splash_image),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+    }
+
+    @Composable
+    fun MainAppContent() {
+        val navController = rememberNavController()
+        val items = listOf(
+            Screen.Home,
+            Screen.Tasks,
+            Screen.Settings
+        )
+        
+        Scaffold(
+            bottomBar = {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
                 
-                Scaffold(
-                    bottomBar = {
-                        val navBackStackEntry by navController.currentBackStackEntryAsState()
-                        val currentDestination = navBackStackEntry?.destination
-                        
-                        if (items.any { it.route == currentDestination?.route }) {
-                            NavigationBar(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                tonalElevation = 8.dp
-                            ) {
-                                items.forEach { screen ->
-                                    NavigationBarItem(
-                                        icon = { Icon(screen.icon, contentDescription = null) },
-                                        label = { Text(stringResource(screen.resourceId)) },
-                                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                                        onClick = {
-                                            navController.navigate(screen.route) {
-                                                popUpTo(navController.graph.findStartDestination().id) {
-                                                    saveState = true
-                                                }
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                ) { innerPadding ->
-                    NavHost(
-                        navController = navController, 
-                        startDestination = Screen.Home.route,
-                        modifier = Modifier.padding(innerPadding)
+                if (items.any { it.route == currentDestination?.route }) {
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 8.dp
                     ) {
-                        composable(Screen.Home.route) {
-                            HomeScreen(
-                                onAddTaskClick = { navController.navigate("add_task") }
-                            )
-                        }
-                        composable(Screen.Tasks.route) {
-                            TasksScreen()
-                        }
-                        composable(Screen.Settings.route) {
-                            SettingsScreen()
-                        }
-                        composable("add_task") {
-                            AddEditTaskScreen(
-                                onBackClick = { navController.popBackStack() },
-                                onSaveSuccess = { navController.popBackStack() }
+                        items.forEach { screen ->
+                            NavigationBarItem(
+                                icon = { Icon(screen.icon, contentDescription = null) },
+                                label = { Text(stringResource(screen.resourceId)) },
+                                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                onClick = {
+                                    navController.navigate(screen.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
                             )
                         }
                     }
+                }
+            }
+        ) { innerPadding ->
+            NavHost(
+                navController = navController, 
+                startDestination = Screen.Home.route,
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                        onAddTaskClick = { navController.navigate("add_task") }
+                    )
+                }
+                composable(Screen.Tasks.route) {
+                    TasksScreen()
+                }
+                composable(Screen.Settings.route) {
+                    SettingsScreen()
+                }
+                composable("add_task") {
+                    AddEditTaskScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onSaveSuccess = { navController.popBackStack() }
+                    )
                 }
             }
         }

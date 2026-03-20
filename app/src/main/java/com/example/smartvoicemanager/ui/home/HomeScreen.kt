@@ -1,6 +1,7 @@
 package com.example.smartvoicemanager.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +35,7 @@ fun HomeScreen(
 ) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val today = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMM dd"))
+    val isDark = isSystemInDarkTheme()
 
     Scaffold(
         topBar = {
@@ -98,16 +100,18 @@ fun HomeScreen(
                     .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // First card: Little darker than second one
                 StatCard(
                     title = "Pending",
                     count = tasks.size.toString(),
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = if (isDark) Color(0xFF1976D2) else Color(0xFFBBDEFB),
                     modifier = Modifier.weight(1f)
                 )
+                // Second card: Light Blue
                 StatCard(
                     title = "Priority",
                     count = tasks.count { it.priority.name == "HIGH" }.toString(),
-                    color = Color(0xFFFFEBEE),
+                    color = if (isDark) Color(0xFF64B5F6) else Color(0xFFE3F2FD),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -169,6 +173,10 @@ fun StatCard(
     color: Color,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
+    // Use dark text on light blue cards for better contrast
+    val textColor = if (isDark) Color.White else Color(0xFF001F3F)
+    
     Surface(
         modifier = modifier,
         color = color,
@@ -182,12 +190,12 @@ fun StatCard(
                 text = count,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = textColor
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = textColor.copy(alpha = 0.8f)
             )
         }
     }
