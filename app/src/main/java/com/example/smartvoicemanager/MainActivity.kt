@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -53,16 +54,20 @@ import java.util.Locale
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        // Track if the splash screen has been shown in the current process
+        private var hasShownSplash = false
+    }
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { _ -> }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Core Splash Screen API
         val splashScreen = installSplashScreen()
         
-        // If this is a recreation (like language change), don't keep the system splash
-        if (savedInstanceState != null) {
+        // If recreating (e.g. language change), immediately hide the system splash
+        if (savedInstanceState != null || hasShownSplash) {
             splashScreen.setKeepOnScreenCondition { false }
         }
 
@@ -72,22 +77,20 @@ class MainActivity : AppCompatActivity() {
         requestRequiredPermissions()
         checkBatteryOptimizations()
 
-        // Check if this is a fresh launch or a recreation
-        val isFirstLaunch = savedInstanceState == null
-
         setContent {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             val isDarkThemePref by settingsViewModel.isDarkTheme.collectAsState()
             val language by settingsViewModel.language.collectAsState()
             
-            var showSplash by remember { mutableStateOf(isFirstLaunch) }
+            var showSplash by remember { mutableStateOf(!hasShownSplash) }
             var isChangingLanguage by remember { mutableStateOf(false) }
 
-            // Initial Splash Timer (Only on first launch)
-            if (isFirstLaunch) {
+            // Splash Screen Timer (Only runs on the very first Activity creation of the process)
+            if (!hasShownSplash) {
                 LaunchedEffect(Unit) {
-                    delay(2000)
+                    delay(2000) // Show full-screen splash for 2 seconds
                     showSplash = false
+                    hasShownSplash = true
                 }
             }
 
@@ -95,9 +98,11 @@ class MainActivity : AppCompatActivity() {
             LaunchedEffect(language) {
                 val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(language)
                 if (AppCompatDelegate.getApplicationLocales() != appLocale) {
-                    isChangingLanguage = true
-                    // Give the UI a moment to show the loading circle before recreation
-                    delay(300)
+                    // Only show "Updating Language" if the splash is already done (user change)
+                    if (hasShownSplash) {
+                        isChangingLanguage = true
+                        delay(800) // Visual feedback for the loading circle
+                    }
                     AppCompatDelegate.setApplicationLocales(appLocale)
                 }
             }
@@ -110,8 +115,8 @@ class MainActivity : AppCompatActivity() {
                         MainAppContent()
                     }
 
-                    // Show loading overlay during language change
-                    if (isChangingLanguage) {
+                    // Language loading overlay (only visible during user-initiated changes)
+                    if (isChangingLanguage && !showSplash) {
                         LanguageLoadingOverlay()
                     }
                 }
@@ -124,28 +129,28 @@ class MainActivity : AppCompatActivity() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.6f))
-                .clickable(enabled = false) {}, // Block clicks
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = false) {},
             contentAlignment = Alignment.Center
         ) {
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
+                tonalElevation = 12.dp
             ) {
                 Column(
-                    modifier = Modifier.padding(32.dp),
+                    modifier = Modifier.padding(horizontal = 48.dp, vertical = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary,
-                        strokeWidth = 4.dp
+                        strokeWidth = 4.dp,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
                     Text(
                         text = "Updating Language...",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -172,11 +177,7 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun MainAppContent() {
         val navController = rememberNavController()
-        val items = listOf(
-            Screen.Home,
-            Screen.Tasks,
-            Screen.Settings
-        )
+        val items = listOf(Screen.Home, Screen.Tasks, Screen.Settings)
         
         Scaffold(
             bottomBar = {
@@ -214,16 +215,10 @@ class MainActivity : AppCompatActivity() {
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(Screen.Home.route) {
-                    HomeScreen(
-                        onAddTaskClick = { navController.navigate("add_task") }
-                    )
+                    HomeScreen(onAddTaskClick = { navController.navigate("add_task") })
                 }
-                composable(Screen.Tasks.route) {
-                    TasksScreen()
-                }
-                composable(Screen.Settings.route) {
-                    SettingsScreen()
-                }
+                composable(Screen.Tasks.route) { TasksScreen() }
+                composable(Screen.Settings.route) { SettingsScreen() }
                 composable("add_task") {
                     AddEditTaskScreen(
                         onBackClick = { navController.popBackStack() },
