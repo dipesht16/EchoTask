@@ -15,15 +15,15 @@
 
 ## 📱 Previews
 
-
-
-<p align="center">
-  <img src="art/1_home.png" width="18%" />
-  <img src="art/2_add_task.png" width="18%" />
-  <img src="art/3_voice_alert.png" width="18%" />
-  <img src="art/4_dark_mode.png" width="18%" />
-  <img src="art/5_multilingual.png" width="18%" />
-</p>
+<table align="center" style="border: none; background-color: transparent;">
+  <tr style="border: none; background-color: transparent;">
+    <td valign="top" style="border: none;"><img src="art/1_home.png" width="100%" /></td>
+    <td valign="top" style="border: none;"><img src="art/2_add_task.png" width="100%" /></td>
+    <td valign="top" style="border: none;"><img src="art/3_voice_alert.png" width="100%" /></td>
+    <td valign="top" style="border: none;"><img src="art/4_dark_mode.png" width="100%" /></td>
+    <td valign="top" style="border: none;"><img src="art/5_multilingual.png" width="100%" /></td>
+  </tr>
+</table>
 
 ## 🚀 Download & Install
 Echo Task is distributed directly to users. 
