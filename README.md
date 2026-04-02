@@ -15,7 +15,7 @@
 
 ## 📱 Previews
 
-*(Replace these image tags with the actual paths to the stitched images you generated)*
+
 
 <p align="center">
   <img src="art/1_home.png" width="18%" />
