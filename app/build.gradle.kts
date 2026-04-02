@@ -50,6 +50,17 @@ android {
         }
     }
 
+    applicationVariants.all {
+        val variant = this
+        if (variant.buildType.name == "release") {
+            variant.outputs.all {
+                val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
+                val abi = output.getFilter(com.android.build.OutputFile.ABI) ?: "universal"
+                output.outputFileName = "EchoTask-v${variant.versionName}-${abi}.apk"
+            }
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -59,6 +70,23 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+val appVersion = android.defaultConfig.versionName ?: "1.0.1"
+val sourceFolder = File(projectDir, "build/outputs/apk/release")
+val destinationFolder = File(rootDir, "releases/v$appVersion")
+
+val deployRelease = tasks.register<Copy>("deployRelease") {
+    group = "distribution"
+    from(sourceFolder)
+    into(destinationFolder)
+    include("**/*.apk")
+}
+
+tasks.configureEach {
+    if (name == "assembleRelease") {
+        finalizedBy(deployRelease)
     }
 }
 
@@ -78,17 +106,14 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.splashscreen)
 
-    // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
-    // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
-    // DataStore
     implementation(libs.androidx.datastore.preferences)
 
     testImplementation(libs.junit)
