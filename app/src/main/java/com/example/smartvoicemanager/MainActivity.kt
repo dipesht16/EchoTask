@@ -84,27 +84,31 @@ class MainActivity : AppCompatActivity() {
             
             var showSplash by remember { mutableStateOf(!hasShownSplash) }
             var isChangingLanguage by remember { mutableStateOf(false) }
+            
+            // Flag to track if the initial language sync has already happened
+            var isInitialized by remember { mutableStateOf(false) }
 
-            // Splash Screen Timer (Only runs on the very first Activity creation of the process)
+            // Splash Screen Timer (Only runs on cold start)
             if (!hasShownSplash) {
                 LaunchedEffect(Unit) {
-                    delay(2000) // Show full-screen splash for 2 seconds
+                    delay(2000)
                     showSplash = false
                     hasShownSplash = true
                 }
             }
 
-            // Language Change Observer
+            // Reliable Language Change Observer
             LaunchedEffect(language) {
                 val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(language)
                 if (AppCompatDelegate.getApplicationLocales() != appLocale) {
-                    // Only show "Updating Language" if the splash is already done (user change)
-                    if (hasShownSplash) {
+                    // Only show loading UI if it's a user action (not the very first app launch)
+                    if (isInitialized && hasShownSplash) {
                         isChangingLanguage = true
-                        delay(800) // Visual feedback for the loading circle
+                        delay(800) // Give user time to see the circle
                     }
                     AppCompatDelegate.setApplicationLocales(appLocale)
                 }
+                isInitialized = true
             }
 
             SmartVoiceManagerTheme(darkTheme = isDarkThemePref) {
@@ -115,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                         MainAppContent()
                     }
 
-                    // Language loading overlay (only visible during user-initiated changes)
+                    // Loading overlay for language switching
                     if (isChangingLanguage && !showSplash) {
                         LanguageLoadingOverlay()
                     }
