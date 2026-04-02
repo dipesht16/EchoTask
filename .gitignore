@@ -1,3 +1,4 @@
+# Android Studio / IntelliJ
 *.iml
 .gradle
 /local.properties
@@ -12,4 +13,29 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Gradle
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
 local.properties
+
+# Log files
+*.log
+
+# Android Studio temporary files
+*.swp
+*~
+
+# Keystore files (NEVER commit these to public repos)
+*.jks
+*.keystore
+*.p12
+*.google_services.json
+
+# Mapbox / Google Maps API Keys
+secrets.xml
+
+# KSP generated files
+build/generated/ksp/
