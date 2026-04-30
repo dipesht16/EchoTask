@@ -20,8 +20,6 @@ class AlarmSchedulerImpl @Inject constructor(
     override fun schedule(task: Task) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("TASK_ID", task.id)
-            putExtra("TASK_TITLE", task.title)
-            putExtra("TASK_DESCRIPTION", task.description)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -53,10 +51,16 @@ class AlarmSchedulerImpl @Inject constructor(
     }
 
     override fun cancel(task: Task) {
-        val intent = Intent(context, AlarmReceiver::class.java)
+        cancelById(task.id)
+    }
+
+    override fun cancelById(taskId: Int) {
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            putExtra("TASK_ID", taskId)
+        }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            task.id,
+            taskId,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

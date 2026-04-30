@@ -3,8 +3,7 @@
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <!-- Match the background color of your splash image -->
         <item name="windowSplashScreenBackground">#F8F9FF</item>
-        <!-- Keep the icon transparent or very small as we will show the full image in Compose -->
-        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/app_icon_main</item>
         <item name="postSplashScreenTheme">@style/Theme.SmartVoiceManager</item>
     </style>
 </resources>

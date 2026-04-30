@@ -74,8 +74,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCompleteTaskUseCase(repository: TaskRepository): CompleteTaskUseCase {
-        return CompleteTaskUseCase(repository)
+    fun provideCompleteTaskUseCase(
+        repository: TaskRepository,
+        alarmScheduler: AlarmScheduler
+    ): CompleteTaskUseCase {
+        return CompleteTaskUseCase(repository, alarmScheduler)
     }
 
     @Provides

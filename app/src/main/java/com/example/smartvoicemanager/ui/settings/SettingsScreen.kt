@@ -1,6 +1,7 @@
 package com.example.smartvoicemanager.ui.settings
 
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.smartvoicemanager.R
+import com.example.smartvoicemanager.ui.ads.AdBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +48,17 @@ fun SettingsScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.settings), fontWeight = FontWeight.Bold) }
             )
+        },
+        bottomBar = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AdBanner(modifier = Modifier.fillMaxWidth())
+            }
         }
     ) { paddingValues ->
         Column(

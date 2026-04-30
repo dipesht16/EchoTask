@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smartvoicemanager.R
 import com.example.smartvoicemanager.ui.task.TaskViewModel
 import com.example.smartvoicemanager.ui.task.components.TaskCard
+import com.example.smartvoicemanager.ui.ads.AdBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +42,17 @@ fun TasksScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.tasks), fontWeight = FontWeight.Bold) }
             )
+        },
+        bottomBar = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AdBanner(modifier = Modifier.fillMaxWidth())
+            }
         }
     ) { paddingValues ->
         Column(
@@ -91,7 +103,7 @@ fun TasksScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 80.dp),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {

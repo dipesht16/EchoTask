@@ -5,4 +5,5 @@ import com.example.smartvoicemanager.domain.model.Task
 interface AlarmScheduler {
     fun schedule(task: Task)
     fun cancel(task: Task)
+    fun cancelById(taskId: Int)
 }

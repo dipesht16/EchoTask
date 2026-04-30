@@ -1,3 +1,5 @@
+import com.android.build.api.variant.FilterConfiguration
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -50,27 +52,35 @@ android {
         }
     }
 
-    applicationVariants.all {
-        val variant = this
-        if (variant.buildType.name == "release") {
-            variant.outputs.all {
-                val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
-                val abi = output.getFilter(com.android.build.OutputFile.ABI) ?: "universal"
-                output.outputFileName = "EchoTask-v${variant.versionName}-${abi}.apk"
-            }
-        }
-    }
+    // Removed deprecated applicationVariants block
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    @Suppress("DEPRECATION")
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    base {
+        archivesName.set("EchoTask-v${defaultConfig.versionName}")
+    }
+
     buildFeatures {
         compose = true
     }
+}
+
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        // Customizations for release variants can be added here
+    }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 val appVersion = android.defaultConfig.versionName ?: "1.0.1"
@@ -82,6 +92,9 @@ val deployRelease = tasks.register<Copy>("deployRelease") {
     from(sourceFolder)
     into(destinationFolder)
     include("**/*.apk")
+    rename { fileName ->
+        fileName.replace("-release", "")
+    }
 }
 
 tasks.configureEach {
@@ -105,6 +118,9 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.splashscreen)
+
+    // AdMob (test ads only)
+    implementation(libs.play.services.ads)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

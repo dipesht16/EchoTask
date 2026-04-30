@@ -17,7 +17,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
@@ -27,13 +29,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -47,64 +47,48 @@ import com.example.smartvoicemanager.ui.settings.SettingsViewModel
 import com.example.smartvoicemanager.ui.task.AddEditTaskScreen
 import com.example.smartvoicemanager.ui.tasks.TasksScreen
 import com.example.smartvoicemanager.ui.theme.SmartVoiceManagerTheme
+import com.google.android.gms.ads.MobileAds
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import java.util.Locale
+import kotlinx.coroutines.launch
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
-    companion object {
-        // Track if the splash screen has been shown in the current process
-        private var hasShownSplash = false
-    }
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { _ -> }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splashScreen = installSplashScreen()
-        
-        // If recreating (e.g. language change), immediately hide the system splash
-        if (savedInstanceState != null || hasShownSplash) {
-            splashScreen.setKeepOnScreenCondition { false }
-        }
-
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
         requestRequiredPermissions()
         checkBatteryOptimizations()
 
+        CoroutineScope(Dispatchers.IO).launch {
+            MobileAds.initialize(this@MainActivity) {}
+        }
+
         setContent {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             val isDarkThemePref by settingsViewModel.isDarkTheme.collectAsState()
             val language by settingsViewModel.language.collectAsState()
             
-            var showSplash by remember { mutableStateOf(!hasShownSplash) }
             var isChangingLanguage by remember { mutableStateOf(false) }
-            
-            // Flag to track if the initial language sync has already happened
             var isInitialized by remember { mutableStateOf(false) }
-
-            // Splash Screen Timer (Only runs on cold start)
-            if (!hasShownSplash) {
-                LaunchedEffect(Unit) {
-                    delay(2000)
-                    showSplash = false
-                    hasShownSplash = true
-                }
-            }
 
             // Reliable Language Change Observer
             LaunchedEffect(language) {
                 val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(language)
                 if (AppCompatDelegate.getApplicationLocales() != appLocale) {
-                    // Only show loading UI if it's a user action (not the very first app launch)
-                    if (isInitialized && hasShownSplash) {
+                    if (isInitialized) {
                         isChangingLanguage = true
-                        delay(800) // Give user time to see the circle
+                        delay(800)
                     }
                     AppCompatDelegate.setApplicationLocales(appLocale)
                 }
@@ -113,14 +97,9 @@ class MainActivity : AppCompatActivity() {
 
             SmartVoiceManagerTheme(darkTheme = isDarkThemePref) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    if (showSplash) {
-                        FullScreenSplash()
-                    } else {
-                        MainAppContent()
-                    }
+                    MainAppContent()
 
-                    // Loading overlay for language switching
-                    if (isChangingLanguage && !showSplash) {
+                    if (isChangingLanguage) {
                         LanguageLoadingOverlay()
                     }
                 }
@@ -158,23 +137,6 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
             }
-        }
-    }
-
-    @Composable
-    fun FullScreenSplash() {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF8F9FF)),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.splash_image),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
         }
     }
 
